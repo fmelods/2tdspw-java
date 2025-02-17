@@ -25,6 +25,8 @@ public class LivroController {
         return new ResponseEntity<>(livroSalvo,HttpStatus.CREATED);
     }
 
+    // @PathVariable localhost:8080/livros/1
+    // @RequestParam localhost:8080/livros/?id=1
     @GetMapping
     public ResponseEntity<List<Livro>> readLivros() {
         List<Livro> livros = livroRepository.findAll();
