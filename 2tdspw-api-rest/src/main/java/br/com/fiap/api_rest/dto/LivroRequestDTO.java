@@ -1,6 +1,6 @@
 package br.com.fiap.api_rest.dto;
 
-public class LivroRequest {
+public class LivroRequestDTO {
     private String titulo;
     private String autor;
 
