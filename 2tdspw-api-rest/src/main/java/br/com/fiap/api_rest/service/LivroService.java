@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -46,16 +45,15 @@ public class LivroService {
         return new LivroResponse(livro.getId(), livro.getAutor() + " - " + livro.getTitulo());
     }
 
-    public LivroResponseDTO livroResponseDTO(Livro livro, boolean self) {
+    public LivroResponseDTO livroToResponseDTO(Livro livro, boolean self) {
         Link link;
         if (self) {
-            link = linkTo(methodOn(LivroController.class).readLivro(livro.getId()))
-            linkTo(methodOn(LivroController.class).readLivros(0).withRel("Lista de Livros"));
-
+            link = linkTo(methodOn(LivroController.class).readLivro(livro.getId())).withSelfRel();
+        } else {
+            link = linkTo(methodOn(LivroController.class).readLivros(0)).withRel("Lista de Livros");
         }
-
-        }
-    return new LivroResponseDTO(livro.getId), livro.getAutor() +
+        return new LivroResponseDTO(livro.getId(), livro.getAutor() + " - " + livro.getTitulo(), link);
+    }
 
     public List<LivroResponse> livrosToResponse(List<Livro> livros) {
         List<LivroResponse> listaLivros = new ArrayList<>();
@@ -70,5 +68,7 @@ public class LivroService {
         return livroRepository.findAll(pageable).map(this::livroToResponse);
     }
 
-    public Page<LivroResponseDTO> findAllDTO(Pageble)
+    public Page<LivroResponseDTO> findAllDTO(Pageable pageable) {
+        return livroRepository.findAll(pageable).map(livro -> livroToResponseDTO(livro, true));
+    }
 }
