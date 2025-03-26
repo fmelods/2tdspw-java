@@ -1,46 +1,60 @@
 package br.com.fiap.api_rest.service;
 
+import br.com.fiap.api_rest.dto.BibliotecaRequest;
+import br.com.fiap.api_rest.dto.BibliotecaResponse;
+import br.com.fiap.api_rest.mapper.BibliotecaMapper;
 import br.com.fiap.api_rest.model.Biblioteca;
 import br.com.fiap.api_rest.repository.BibliotecaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.Optional;
 
 @Service
 public class BibliotecaService {
+    private final BibliotecaRepository bibliotecaRepository;
+    private final BibliotecaMapper bibliotecaMapper = new BibliotecaMapper();
 
     @Autowired
-    private BibliotecaRepository bibliotecaRepository;
-
-    // Buscar uma biblioteca por ID
-    public Biblioteca findById(Long id) {
-        return bibliotecaRepository.findById(id).orElse(null);
+    public BibliotecaService(BibliotecaRepository bibliotecaRepository) {
+        this.bibliotecaRepository = bibliotecaRepository;
     }
 
-    // Buscar várias bibliotecas por seus IDs
-    public List<Biblioteca> findByIds(List<Long> ids) {
-        return bibliotecaRepository.findAllById(ids);
+    public BibliotecaResponse save(BibliotecaRequest bibliotecaRequest) {
+        return bibliotecaMapper.bibliotecaToResponse(bibliotecaRepository.save(bibliotecaMapper.requestToBiblioteca(bibliotecaRequest)));
     }
 
-    // Salvar uma nova biblioteca
-    public Biblioteca salvarBiblioteca(Biblioteca biblioteca) {
-        return bibliotecaRepository.save(biblioteca);
+    public Page<BibliotecaResponse> findAll(Pageable pageable) {
+        return bibliotecaRepository.findAll(pageable).map(bibliotecaMapper::bibliotecaToResponse);
     }
 
-    // Atualizar uma biblioteca
-    public Biblioteca atualizarBiblioteca(Long id, Biblioteca bibliotecaDetails) {
-        return bibliotecaRepository.findById(id).map(biblioteca -> {
-            biblioteca.setNome(bibliotecaDetails.getNome());
-            return bibliotecaRepository.save(biblioteca);
-        }).orElse(null);
+    public Biblioteca findBibliotecaById(Long id) {
+        Optional<Biblioteca> biblioteca = bibliotecaRepository.findById(id);
+        return biblioteca.orElse(null);
     }
 
-    // Excluir uma biblioteca
-    public boolean excluirBiblioteca(Long id) {
-        return bibliotecaRepository.findById(id).map(biblioteca -> {
-            bibliotecaRepository.delete(biblioteca);
+    public BibliotecaResponse findById(Long id) {
+        Optional<Biblioteca> biblioteca = bibliotecaRepository.findById(id);
+        return biblioteca.map(bibliotecaMapper::bibliotecaToResponse).orElse(null);
+    }
+
+    public BibliotecaResponse update(BibliotecaRequest bibliotecaRequest, Long id) {
+        Optional<Biblioteca> biblioteca = bibliotecaRepository.findById(id);
+        if (biblioteca.isPresent()) {
+            Biblioteca bibliotecaSalvo = bibliotecaRepository.save(biblioteca.get());
+            return bibliotecaMapper.bibliotecaToResponse(bibliotecaSalvo);
+        }
+        return null;
+    }
+
+    public boolean delete(Long id) {
+        Optional<Biblioteca> biblioteca = bibliotecaRepository.findById(id);
+        if (biblioteca.isPresent()) {
+            bibliotecaRepository.delete(biblioteca.get());
             return true;
-        }).orElse(false);
+        }
+        return false;
     }
 }

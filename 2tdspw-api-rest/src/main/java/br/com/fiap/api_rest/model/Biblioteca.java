@@ -1,29 +1,26 @@
 package br.com.fiap.api_rest.model;
 
 import jakarta.persistence.*;
+
 import java.util.List;
 
 @Entity
 public class Biblioteca {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
-
+    private Long id;
     private String nome;
-
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "id_endereco")
     private Endereco endereco;
-
-    @ManyToMany(mappedBy = "bibliotecas")
+    @OneToMany(mappedBy = "biblioteca")
     private List<Livro> livros;
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

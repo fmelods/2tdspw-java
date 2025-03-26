@@ -1,48 +1,67 @@
 package br.com.fiap.api_rest.service;
 
+import br.com.fiap.api_rest.dto.AutorRequest;
+import br.com.fiap.api_rest.dto.AutorResponse;
+import br.com.fiap.api_rest.mapper.AutorMapper;
 import br.com.fiap.api_rest.model.Autor;
 import br.com.fiap.api_rest.repository.AutorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class AutorService {
+    private final AutorMapper autorMapper = new AutorMapper();
 
+    // SINGLETON----
+    private final AutorRepository autorRepository;
     @Autowired
-    private AutorRepository autorRepository;
+    public AutorService(AutorRepository autorRepository) {
+        this.autorRepository = autorRepository;
+    }
+    // SINGLETON----
 
-    // Método para buscar um autor por ID, retornando um Optional
-    public Autor findById(Long id) {
-        Optional<Autor> autorOpt = autorRepository.findById(id);
-        return autorOpt.orElseThrow(() -> new RuntimeException("Autor não encontrado"));
+    public AutorResponse save(AutorRequest autorRequest) {
+        return autorMapper.autorToResponse(autorRepository.save(autorMapper.requestToAutor(autorRequest)));
     }
 
-    // Método para buscar múltiplos autores por IDs
-    public List<Autor> findByIds(List<Long> ids) {
-        return autorRepository.findAllById(ids);
+    public List<Autor> saveAll(List<AutorRequest> autoresRequest) {
+        List<Autor> autores = new ArrayList<>();
+        for (AutorRequest autorRequest : autoresRequest) {
+            autores.add(autorMapper.requestToAutor(autorRequest));
+        }
+        return autorRepository.saveAll(autores);
     }
 
-    // Método para salvar um autor
-    public Autor salvarAutor(Autor autor) {
-        return autorRepository.save(autor);
+    public Page<AutorResponse> findAll(Pageable pageable) {
+        return autorRepository.findAll(pageable).map(autorMapper::autorToResponse);
     }
 
-    // Método para atualizar um autor
-    public Autor atualizarAutor(Long id, Autor autorDetails) {
-        return autorRepository.findById(id).map(autor -> {
-            autor.setNome(autorDetails.getNome());
-            return autorRepository.save(autor);
-        }).orElseThrow(() -> new RuntimeException("Autor não encontrado para atualização"));
+    public AutorResponse findById(Long id) {
+        Optional<Autor> autor = autorRepository.findById(id);
+        return autor.map(autorMapper::autorToResponse).orElse(null);
     }
 
-    // Método para excluir um autor
-    public boolean excluirAutor(Long id) {
-        return autorRepository.findById(id).map(autor -> {
-            autorRepository.delete(autor);
+    public AutorResponse update(AutorRequest autorRequest, Long id) {
+        Optional<Autor> autor = autorRepository.findById(id);
+        if (autor.isPresent()) {
+            Autor autorSalvo = autorRepository.save(autor.get());
+            return autorMapper.autorToResponse(autorSalvo);
+        }
+        return null;
+    }
+
+    public boolean delete(Long id) {
+        Optional<Autor> autor = autorRepository.findById(id);
+        if (autor.isPresent()) {
+            autorRepository.delete(autor.get());
             return true;
-        }).orElseThrow(() -> new RuntimeException("Autor não encontrado para exclusão"));
+        }
+        return false;
     }
 }
